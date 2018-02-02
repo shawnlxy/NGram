@@ -1,88 +1,129 @@
-# Project Title
+# NGram
 
-One Paragraph of project description goes here
+This project implements Google Search’s Auto Completion function with Hadoop MapReduce
 
-## Getting Started
+## Prerequisites 
 
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes. See deployment for notes on how to deploy the project on a live system.
+* [MAMAP: My Apache - MySQL - PHP](https://www.mamp.info/en/) - Used to connect web interface and mysql
+* [Docker](https://docs.docker.com/) - Container
 
-### Prerequisites
-
-What things you need to install the software and how to install them
-
-```
-Give examples
-```
-
-### Installing
-
-A step by step series of examples that tell you have to get a development env running
-
-Say what the step will be
+### How to build hadoop cluster on Docker
 
 ```
-Give the example
+$ mkdir bigdata
+$ cd bigdata
+$ sudo docker pull joway/hadoop-cluster 
+$ git clone https://github.com/joway/hadoop-cluster-docker 
+$ sudo docker network create --driver=bridge hadoop 
+$ cd hadoop-cluster-docker
+
+$ sudo ./start-container.sh
+
+$ ./start-hadoop.sh
+```
+### Mysql Guide
+```
+look up MYSQL port:
+check in MAMP or enter the command line in MYSQL:
+
+$ SHOW VARIABLES WHERE Variable_name = 'port' ; 
+
+Configure MYSQL:
+
+$ Open Terminal 
+$ cd /Applications/MAMP/Library/bin/
+$ ./mysql -uroot -p // enter your password
+
+$ create database test;
+$ use test;
+$ create table output(starting_phrase VARCHAR(250), following_word VARCHAR(250), count INT); 
+$ GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '**_your-password_** ' WITH GRANT OPTION;   //enable remote data transfer
+$ FLUSH PRIVILEGES;
+```
+## Get Started 
+Enter hadoop:
+```
+$ cd hadoop-cluster-docker
+$ ./start-container.sh
+$ ./start-hadoop.sh
+$ cd src
+
+```
+download mysql-connector
+```
+wget http://central.maven.org/maven2/mysql/mysql-connector-java/5.1.39/mysql-connector-java-5.1.39.jar
 ```
 
-And repeat
+HDFS operations:
+```
+$ hdfs dfs -mkdir /mysql
+$ hdfs dfs -put mysql-connector-java-*.jar /mysql/
+$ put NGram folder into hadoop
+$ cd NGram
+$ hdfs dfs -mkdir -p input
+$ hdfs dfs -rm -r /output 
+$ hdfs dfs -put bookList/*  input/ 
+$ cd src
+```
+Open Driver.java and modify 4 parameters:
 
 ```
-until finished
+local_ip_address  : 192.168.31.16
+MySQL_port : 8889
+your_password: root
+hdfs_path_to_mysql-connector: /mysql/mysql-connector-java-5.1.39-bin.jar
+
+ DBConfiguration.configureDB(conf2,
+ "com.mysql.jdbc.Driver", // driver class
+ "jdbc:mysql://local_ip_address:MySQL_port/test", // db url
+ "root", // user name
+ “your_password”); //password
+
+job2.addArchiveToClassPath(new Path(“hdfs_path_to_mysql-connector”));
+```
+Here is an example:
+```
+DBConfiguration.configureDB(conf2,
+"com.mysql.jdbc.Driver",
+"jdbc:mysql://192.168.31.16:8889/test",
+"root",
+"root");
+job2.addArchiveToClassPath(new Path("/mysql/mysql-connector-java-5.1.39-bin.jar"));
+```
+Run Auto-Complete
+```
+$ hadoop com.sun.tools.javac.Main *.java
+$ jar cf ngram.jar *.class
+$ hadoop jar ngram.jar Driver input /output 2 3 4
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
+Set at least 3G memory, 3CPU in Docker
 ```
-Give an example
+2 represents ngram_size 
+3 represents threashold_size
+4 represents following_word_size
 ```
+You can check whether there is output in mysql database:
 
-### And coding style tests
+$ select * from output limit 10 ;
 
-Explain what these tests test and why
 
+
+## Running Web Interface
+
+Put autocomplete folder into :
 ```
-Give an example
+ubuntu /usr/local/ammps/www 
+mac /Applications/MAMP/htdocs
 ```
+Correct the parameters such as port number in Autocomplete/ajax_refresh.php
 
-## Deployment
+Stop Servers then Start Servers in MAMP
 
-Add additional notes about how to deploy this on a live system
+You can vist localhost:8888(ubuntu localhost:80, Windows localhost) and choose autocomplete
 
-## Built With
+Demo pic:
 
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
+![screen shot 2018-01-27 at 6 15 07 pm](https://user-images.githubusercontent.com/36029186/35716128-b0c98dbc-07a4-11e8-82a9-7569c2461736.png)
 
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
-
-## Authors
-
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
-
-## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone who's code was used
-* Inspiration
-* etc
 
