@@ -41,6 +41,13 @@ $ GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' IDENTIFIED BY '**_your-password_** '
 $ FLUSH PRIVILEGES;
 ```
 ## Get Started 
+
+Download project:
+```
+$ cd ~/src
+$ git clone https://github.com/shawnlxy/NGram.git
+```
+
 Enter hadoop:
 ```
 $ cd hadoop-cluster-docker
@@ -58,7 +65,6 @@ HDFS operations:
 ```
 $ hdfs dfs -mkdir /mysql
 $ hdfs dfs -put mysql-connector-java-*.jar /mysql/
-$ put NGram folder into hadoop
 $ cd NGram
 $ hdfs dfs -mkdir -p input
 $ hdfs dfs -rm -r /output 
